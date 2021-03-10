@@ -102,3 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
+
+# build output
+build/
+
+# assets which may or will have underlying licenses (e.g. music)
+src/assets/
