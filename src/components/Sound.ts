@@ -6,26 +6,31 @@ import { SoundTransform, Configuration } from './sound/SoundTransform'
  * been loaded.
  */
 export class Sound {
-	
-    constructor(readonly source: string, private context: p5, private configuration?: Configuration) {}
+	constructor(readonly source: string, private context: p5, private configuration?: Configuration) {}
 
 	load = (success: (sound: Sound) => void) => {
 		if (!this._sound) {
 			this._sound = new p5.SoundFile(this.source, () => {
+				this._loaded = true
 				success(this)
 			})
 		}
 	}
 
-    private _sound: p5.SoundFile
+	private _sound: p5.SoundFile
 
-    /**
-     * The p5.SoundFile that loaded the {@link Sound.source}.
-     */
+	/**
+	 * The p5.SoundFile that loaded the {@link Sound.source}.
+	 */
 	get sound(): p5.SoundFile {
-        return this._sound
-    }
+		return this._sound
+	}
 
+	private _loaded: boolean = false
+
+	get loaded(): boolean {
+		return this._loaded
+	}
 
 	private _soundTransform: SoundTransform
 
@@ -40,11 +45,11 @@ export class Sound {
 		return this._soundTransform
 	}
 
-    togglePlayPause = () => {
-        if (!this.sound) {
-            return
-        }
+	togglePlayPause = () => {
+		if (!this.sound) {
+			return
+		}
 
-        this.sound.isPlaying() ? this.sound.pause() : this.sound.play()
-    }
+		this.sound.isPlaying() ? this.sound.pause() : this.sound.play()
+	}
 }

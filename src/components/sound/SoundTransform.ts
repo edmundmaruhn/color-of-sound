@@ -88,7 +88,7 @@ export class SoundTransform {
 			values = values.map((amplitude) => this.context.map(amplitude, 0, 255, 0, 1))
 		}
 
-		this._frequencySpectrum = values
+		this._frequencySpectrum = values.reverse()
 	}
 
 	private setupWaveform = () => {
