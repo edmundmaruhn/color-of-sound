@@ -1,11 +1,11 @@
-import { Sketch } from '../base/Sketch'
-import { Color } from '../physics/Color'
-import { Cartesian, Polar } from '../geometry/Point'
-import { Sound } from '../Sound'
+import { Sketch } from '../../base/Sketch'
+import { Color } from '../../physics/Color'
+import { Cartesian, Polar } from '../../geometry/Point'
+import { Sound } from '../../Sound'
 
-import '../../assets/audio/lindsey-sterling--elements--128kbps.mp3'
-import '../../assets/audio/lindsey-sterling--zi-zis-journey--128kbps.mp3'
-import '../../assets/audio/vivaldi--four-seasons-spring--128kbps.mp3'
+import '../../../assets/audio/lindsey-sterling--elements--128kbps.mp3'
+import '../../../assets/audio/lindsey-sterling--zi-zis-journey--128kbps.mp3'
+import '../../../assets/audio/vivaldi--four-seasons-spring--128kbps.mp3'
 
 export class Example06 extends Sketch {
 	private samples = 2048

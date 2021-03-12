@@ -1,9 +1,9 @@
 import * as p5 from 'p5'
 import * as _ from 'lodash'
-import { Sketch } from '../base/Sketch'
-import { Sequence } from '../base/stroke/Sequence'
+import { Sketch } from '../../base/Sketch'
+import { Sequence } from '../../base/stroke/Sequence'
 
-import '../../assets/audio/lindsey-sterling--elements--128kbps.mp3'
+import '../../../assets/audio/lindsey-sterling--elements--128kbps.mp3'
 
 interface Configuration {
 	scale: number

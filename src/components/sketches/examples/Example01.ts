@@ -1,7 +1,7 @@
 import * as p5 from 'p5'
 import * as _ from 'lodash'
-import { Sketch } from '../base/Sketch'
-import { Sequence } from '../base/stroke/Sequence'
+import { Sketch } from '../../base/Sketch'
+import { Sequence } from '../../base/stroke/Sequence'
 
 export class Example01 extends Sketch {
 	private sequence: Sequence
