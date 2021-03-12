@@ -10,6 +10,8 @@ import '../../assets/audio/lindsey-sterling--zi-zis-journey--128kbps.mp3'
 import '../../assets/audio/vivaldi--four-seasons-spring--128kbps.mp3'
 import { Color } from '../physics/Color'
 import { Cartesian, Polar } from '../geometry/Point'
+import { SoundTransform } from '../sound/SoundTransform'
+import { Sound } from '../Sound'
 
 interface Configuration {
 	scale: number
@@ -44,19 +46,10 @@ export class Example06 extends Sketch {
 	// the delta of human visible wavelengths determines the target range's upper bound to map values to
 	private visibleSpectrum = Color.MAX_VISIBLE_WAVELENGTH - Color.MIN_VISIBLE_WAVELENGTH
 
-	private audio: p5.SoundFile
+	private audio: Sound
 	private canPlayAudio: boolean = false
-	private soundTransform: p5.FFT
-	private audioAnalysis: {
-		analyze: Array<number>
-		waveform: Array<number>
-		average: {
-			analyze: number
-			waveform: number
-		}
-	}
 
-	private spectra: any
+	//private spectra: any
 
 	private playPauseButtonSettings = {
 		width: 89,
@@ -94,37 +87,37 @@ export class Example06 extends Sketch {
 	preload = () => {
 		//this.audio = new p5.SoundFile('assets/audio/vivaldi--four-seasons-spring--128kbps.mp3', (...args) => {
 		//this.audio = new p5.SoundFile('assets/audio/lindsey-sterling--zi-zis-journey--128kbps.mp3', (...args) => {
-		this.audio = new p5.SoundFile('assets/audio/lindsey-sterling--elements--128kbps.mp3', (...args) => {
-			console.log('success', args)
+		this.audio = new Sound('assets/audio/lindsey-sterling--elements-128kbps.mp3', this, {
+			resolution: this.samples,
+			waveformEnabled: true,
+		})
+
+		this.audio.load((sound) => {
+			console.log(sound)
+
 			this.canPlayAudio = true
-			this.audio.setVolume(1.0)
+
+			sound.sound.setVolume(1.0)
 
 			this.renderContext.mouseClicked(() => {
 				if (!this.playPauseButtonClicked()) {
 					return
 				}
 
-				if (this.audio.isPlaying()) {
-					this.audio.pause()
-					//this.noLoop()
-				} else {
-					this.audio.play()
-
-					//this.loop()
-				}
+				sound.togglePlayPause()
 			})
 		})
 
 		//this.spectra = this.loadJSON('assets/data/fe.json')
-		this.spectra = {}
+		//this.spectra = {}
 
-		const callback = (spectra: any) => {
-			for (let prop in spectra) {
-				this.spectra[prop] = spectra[prop]
-			}
-		}
+		//const callback = (spectra: any) => {
+		//	for (let prop in spectra) {
+		//		this.spectra[prop] = spectra[prop]
+		//	}
+		//}
 
-		this.loadJSON('assets/data/fe.json', undefined, undefined, callback)
+		//this.loadJSON('assets/data/fe.json', undefined, undefined, callback)
 		//this.loadJSON('assets/data/h.json', undefined, undefined, callback)
 	}
 
@@ -135,7 +128,6 @@ export class Example06 extends Sketch {
 		//this.filter(this.BLUR, 10)
 
 		// 0.8 = default smoothing of FFT
-		this.soundTransform = new p5.FFT(0.8, this.samples)
 
 		//this.oscillator = new p5.Oscillator(19000)
 		//const o2 = new p5.Oscillator(15970)
@@ -146,21 +138,21 @@ export class Example06 extends Sketch {
 
 	draw = () => {
 		this.clear()
-		this.analyzeAudio()
+		this.audio.soundTransform.setup()
 		this.render()
 	}
 
 	render = () => {
-		if (this.canPlayAudio && this.audio.isPlaying()) {
+		if (this.canPlayAudio && this.audio.sound.isPlaying()) {
+			this.renderVisibleSpectrumWaveformLine()
 			this.renderVisibleSpectrumAsCircle()
 			this.renderVisibleSpectrum()
-			this.renderVisibleSpectrumWaveformLine()
 		}
-		this.canPlayAudio && this.renderPlayPauseButton(this.audio.isPlaying())
+		this.canPlayAudio && this.renderPlayPauseButton(this.audio.sound.isPlaying())
 
-		this.renderElementSpectra()
+		//this.renderElementSpectra()
 	}
-
+	/*
 	private renderElementSpectra = () => {
 		this.push()
 
@@ -188,66 +180,70 @@ export class Example06 extends Sketch {
 
 		this.pop()
 	}
+	*/
 
 	private renderVisibleSpectrum = () => {
-		this.push()
-
-		const strokeWeight = this.width / this.samples
+		const soundTransform = this.audio.soundTransform
+		const strokeWeight = this.width / soundTransform.configuration.resolution
 		const strokeOffset = strokeWeight * 0.5
+		
+		this.push()
 
 		this.strokeWeight(strokeWeight + 0.75) // +0.75 to close gaps due to rounding error
 
-		for (let s = 0; s < this.samples; ++s) {
-			const x = this.map(s, 0, this.samples, 0, this.width)
+		//soundTransform.forEach((frequency, waveform, position, configuration) => {})
+		soundTransform.forEach((frequency, waveform, position, configuration) => {
+			const x = this.map(position, 0, configuration.resolution, 0, this.width)
 
-			this.setStrokeVisibleSpectrumColorForSample(s, this.samples, this.audioAnalysis.analyze[s])
+			this.setStrokeVisibleSpectrumColorForSample(position, configuration.resolution, frequency)
 			this.line(x + strokeOffset, 0, x + strokeOffset, 55)
 
-			//this.setStrokeVisibleSpectrumColorForSample(s, this.samples, this.audioAnalysis.waveform[s])
-			this.stroke(0x30, 0x30, 0x30, this.audioAnalysis.waveform[s])
+			this.setStrokeVisibleSpectrumColorForSample(position, configuration.resolution, waveform)
 			this.line(x + strokeOffset, 55, x + strokeOffset, 110)
-		}
+		})
 
 		this.pop()
 	}
 
 	private renderVisibleSpectrumAsCircle = () => {
-		this.push()
+		const soundTransform = this.audio.soundTransform
+		
 		const verticalSpace = (this.height - 110) * 0.5 + 100
-		this.translate(this.width * 0.5, verticalSpace) //this.height * 0.5)
+		const angle = (Math.PI * 2) / soundTransform.configuration.resolution
+		
+		this.push()
 
-		const angle = (Math.PI * 2) / this.samples
-		this.strokeWeight(1.5)
-
-		for (let s = 0; s < this.samples; ++s) {
+		this.translate(this.width * 0.5, verticalSpace)
+		
+		soundTransform.forEach((frequency, waveform, position, configuration) => {
 			this.push()
-			this.setStrokeVisibleSpectrumColorForSample(s, this.samples, this.audioAnalysis.analyze[s])
-			//this.scale(1 + this.audioAnalysis.average.analyze * 2)
-			this.rotate(s * angle)
-			this.line(0, -144, 0, -233)
-			/*
+			
+			this.strokeWeight(1.5)
+			this.setStrokeVisibleSpectrumColorForSample(position, configuration.resolution, frequency)
+			this.rotate(position * angle)
+
 			this.beginShape()
 			this.vertex(0, -144)
 			this.vertex(0, -233)
 			this.endShape()
-			*/
+
 			this.pop()
 
-			this.push()
-			this.stroke(0x30, 0x30, 0x30, this.audioAnalysis.waveform[s])
-			//this.setStrokeVisibleSpectrumColorForSample(s, this.samples, this.audioAnalysis.waveform[s])
-			//this.scale(this.audioAnalysis.average.waveform * 2)
-			this.rotate(s * angle)
 
-			this.line(0, -89, 0, -144)
-			/*
+			this.push()
+			
+			this.strokeWeight(0.75)
+			this.setStrokeVisibleSpectrumColorForSample(position, configuration.resolution, waveform)
+			this.rotate(position * angle)
+
+
 			this.beginShape()
 			this.vertex(0, -89)
 			this.vertex(0, -144)
 			this.endShape()
-			*/
+
 			this.pop()
-		}
+		})
 
 		this.pop()
 	}
@@ -259,67 +255,28 @@ export class Example06 extends Sketch {
 		this.strokeWeight(3)
 		this.stroke(0x30)
 
-		const angle = (Math.PI * 2) / this.samples
-
-		// Monochrome variation
 		this.beginShape()
-		for (let s = 0; s < this.samples; ++s) {
-			/*
-			const point = new Polar(this.audioAnalysis.waveform[s] * 10, angle * s).toCartesian()
-			//console.log(this.audioAnalysis.waveform[s] *)
-			this.vertex(point.x, point.y)
-			*/
-			const x = this.map(s, 0, this.audioAnalysis.waveform.length, 0, this.width)
-			const y = this.map(this.audioAnalysis.waveform[s], -1, 1, 0, this.height)
+
+		this.audio.soundTransform.forEach((frequency, waveform, position, configuration) => {
+			const x = this.map(position, 0, configuration.resolution, 0, this.width)
+			const y = this.map(waveform, 0, 1, 0, this.height)
 
 			this.vertex(x, y + 100)
-		}
+		})
+		
 		this.endShape()
-
-		/*
-		// Colorized variation
-		for (let s = 1; s < this.samples; ++s) {
-			const x1 = this.map(s - 1, 0, this.audioAnalysis.waveform.length, 0, this.width)
-			const y1 = this.map(this.audioAnalysis.waveform[s-1], -1, 1, 0, this.height)
-			const x2 = this.map(s, 0, this.audioAnalysis.waveform.length, 0, this.width)
-			const y2 = this.map(this.audioAnalysis.waveform[s], -1, 1, 0, this.height)
-
-			this.setStrokeVisibleSpectrumColorForSample(s, this.samples, this.audioAnalysis.waveform[s])
-			this.line(x1, y1 + 100, x2, y2 + 100)
-		}*/
 
 		this.pop()
 	}
 
 	private setStrokeVisibleSpectrumColorForSample = (current: number, samples: number, alpha: number = 1) => {
 		const value = this.map(current, 0, samples, Color.MIN_VISIBLE_WAVELENGTH, Color.MAX_VISIBLE_WAVELENGTH)
-		this.setStrokeFromVisibleWavelength(value)
+		this.setStrokeFromVisibleWavelength(value, alpha)
 	}
 
 	private setStrokeFromVisibleWavelength = (wavelength: number, alpha: number = 1) => {
 		const color = Color.fromWavelength(wavelength)
 		this.stroke(color.r, color.g, color.b, alpha)
-	}
-
-	private analyzeAudio = () => {
-		// 1) normalize frequency spectrum (e.g. to map alpha channel value range)
-		// 2) reverse frequency spectrum in order to have highest frequency first (maps to visible spectrum wavelengths)
-		const analyze = this.soundTransform
-			.analyze()
-			.map((amplitude) => amplitude / 255)
-			.reverse()
-		const waveform = this.soundTransform.waveform().map((amplitude) => this.map(amplitude, -1, 1, 0, 1))
-
-		//this.audio.setVolume(1)
-		this.audioAnalysis = {
-			analyze,
-			waveform,
-			average: {
-				analyze: analyze.reduce((prev, curr) => prev + curr, 0) / analyze.length,
-				waveform: waveform.reduce((prev, curr) => prev + curr, 0) / waveform.length,
-			},
-		}
-		//this.audio.setVolume(0)
 	}
 
 	private renderPlayPauseButton = (playing: boolean) => {
