@@ -79,7 +79,6 @@ export class SoundImageGenerator01 extends Sketch {
 
 	private addFrequencySpectrumToImageBuffer = () => {
 		const frequencies = this.audio.soundTransform.frequencySpectrum
-		const { resolution } = this.audio.soundTransform.configuration
 
 		const pixels = frequencies.map((frequency, position) => {
 			return Color.toARGBInteger(this.wavelengthColors[position], frequency)
