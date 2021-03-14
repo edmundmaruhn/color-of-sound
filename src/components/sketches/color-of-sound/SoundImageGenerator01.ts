@@ -4,7 +4,7 @@ import { Sound } from '../../Sound'
 import { Cartesian } from '../../geometry/Point'
 import { Size } from '../../geometry/Size'
 import { PlayPauseButton } from '../../ui/PlayPauseButton'
-import { Color } from '../../physics/Color'
+import { Color, RGB } from '../../physics/Color'
 
 import { Asset } from '../../Asset'
 import { Adjustment } from '../../color/Adjustment'
@@ -13,11 +13,11 @@ import * as p5 from 'p5'
 /**
  * Plays a given audio asset, renders the frequency spectrum  over time to an image buffer and generates a sequence of
  * images which are downloaded automatically.
- * 
+ *
  * The acoustic frequency spectrum is mapped to the visible light spectrum. The according wavelength of each mapped
  * frequency is used to convert it into a RGB representation of the visible light spectrum. The frequency's amplitude
  * (energy) is applied as alpha (transparency) and the resulting RGBA value is stored as pixel.
- * 
+ *
  * The resolution (given by the internal samples property) is stored horizontally (x-axis) and therefore defines the
  * width of the resulting image(s). The time domain is given vertically and its resolution depends on the framerate
  * (60fps by default).
@@ -29,6 +29,7 @@ export class SoundImageGenerator01 extends Sketch {
 	private audioSource = Asset.Sound.LINDSEY_STERLING__HEIST__128_KBPS
 	private audio: Sound
 	private volume = 1.0
+	private wavelengthColors: Array<RGB>
 
 	private button: PlayPauseButton
 
@@ -40,6 +41,8 @@ export class SoundImageGenerator01 extends Sketch {
 		this.buffer = new Buffer(this, { position: new Cartesian(), size: new Size(this.samples, this.samples / 2) })
 		this.buffer.bufferComplete = this.bufferCompleteHandler
 		this.button = new PlayPauseButton(this)
+
+		this.wavelengthColors = Color.span(this.samples, this)
 
 		this.audio = new Sound(this.audioSource.location, this, {
 			resolution: this.samples,
@@ -79,10 +82,7 @@ export class SoundImageGenerator01 extends Sketch {
 		const { resolution } = this.audio.soundTransform.configuration
 
 		const pixels = frequencies.map((frequency, position) => {
-			const wavelength = this.map(position, 0, resolution, Color.MIN_VISIBLE_WAVELENGTH, Color.MAX_VISIBLE_WAVELENGTH)
-			const rgb = Color.fromWavelength(wavelength)
-
-			return Color.toARGBInteger(rgb, frequency)
+			return Color.toARGBInteger(this.wavelengthColors[position], frequency)
 			//const withChangedContrast = Adjustment.contrastFromRGB(rgb, this.contrast)
 			//return Color.toARGBInteger(Color.fromInteger(withChangedContrast), frequency)
 		})

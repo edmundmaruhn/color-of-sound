@@ -25,6 +25,28 @@ export class Color {
 	 */
 	static MAX_VISIBLE_WAVELENGTH = 750
 
+
+	/**
+	 * Spans an RGB color array of 'resolution' length representing wavelength-to-RGB mappings within the visible light
+	 * spectrum.
+	 * 
+	 * @param resolution
+	 * An integer specifying how many wavelengths within the visible light spectrum should be mapped to a color
+	 * 
+	 * @param p5
+	 * The p5 instance is used to access calculation utilities.
+	 * 
+	 * @returns
+	 * An array for RGB color values. The array has the length of the given resolution
+	 */
+	static span = (resolution: number, p5: p5): Array<RGB> => {
+		return Array.from({ length: resolution }, (v, position) => {
+			// v is always undefined !!!
+			const wavelength = p5.map(position, 0, resolution, Color.MIN_VISIBLE_WAVELENGTH, Color.MAX_VISIBLE_WAVELENGTH)
+			return Color.fromWavelength(wavelength)
+		})
+	}
+
 	/**
 	 * Simple utility decomposing an RGB integer value into its color channel components.
 	 */
