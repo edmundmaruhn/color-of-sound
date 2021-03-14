@@ -58,7 +58,7 @@ export class SoundTransform {
 
 	readonly configuration: Required<Configuration>
 
-	constructor(private context: p5, private source: p5.SoundFile, configuration: Configuration) {
+	constructor(private context: p5, private source: p5.SoundFile | p5.Oscillator, configuration?: Configuration) {
 		this.configuration = { ...defaultConfiguration, ...configuration }
 
 		this.transform = new p5.FFT(this.configuration.smoothing, this.configuration.resolution)

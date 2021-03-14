@@ -1,5 +1,5 @@
 export class Cartesian {
-	constructor(readonly x: number, readonly y: number) {}
+	constructor(readonly x: number = 0, readonly y: number = 0) {}
 
 	rotate(angle: number) {
 		return this.toPolar().rotate(angle).toCartesian()

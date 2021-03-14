@@ -9,7 +9,7 @@ interface XYZ {
 	readonly z: number
 }
 
-interface RGB {
+export interface RGB {
 	readonly r: number
 	readonly g: number
 	readonly b: number
@@ -34,6 +34,18 @@ export class Color {
 			g: (rgb >> 8) & 0xff,
 			b: (rgb >> 0) & 0xff,
 		}
+	}
+
+	static toARGBInteger = (rgb: RGB, alpha: number = 1.0) => {
+		alpha = Math.min(Math.max(alpha, 0.0), 1.0) // validate boundaries
+		alpha = Math.floor(alpha * 255) // convert to 8-bit integer value
+
+		const a = (alpha & 0xff) << 24
+		const r = (rgb.r & 0xff) << 16
+		const g = (rgb.g & 0xff) << 8
+		const b = rgb.b & 0xff
+
+		return a | r | g | b
 	}
 
 	/**
