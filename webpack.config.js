@@ -29,6 +29,14 @@ module.exports = (env) => {
 					},
 				},
 				{
+					test: /\.png$/,
+					exclude: /node_modules/,
+					type: 'asset/resource',
+					generator: {
+						filename: 'assets/images/spectograms/[name][ext]',
+					},
+				},
+					{
 					test: /\.json$/,
 					exclude: /node_modules/,
 					type: 'asset/resource',
